@@ -1,3 +1,4 @@
+// routes/webhook.js
 const router = require("express").Router();
 const crypto = require("crypto");
 const { getChangedFiles } = require("../lib/github");
@@ -6,7 +7,6 @@ const { enqueue } = require("../lib/queue");
 router.post("/", async (req, res) => {
   const sig    = req.headers["x-hub-signature-256"];
   const secret = process.env.WEBHOOK_SECRET || "quantum_webhook_secret_2024";
-
   if (sig) {
     const expected = `sha256=${crypto.createHmac("sha256", secret).update(JSON.stringify(req.body)).digest("hex")}`;
     try {
@@ -22,8 +22,8 @@ router.post("/", async (req, res) => {
   if (!commits?.length) return res.json({ message: "No commits" });
 
   const commitSha = head_commit?.id || "unknown";
-  const changed = await getChangedFiles(commits);
-  const queued  = enqueue(changed, commitSha, "webhook");
+  const changed   = await getChangedFiles(commits); // already scoped to src/ + include/
+  const queued    = enqueue(changed, commitSha, "webhook");
 
   res.json({ message: "Webhook received", commitSha, fileCount: queued });
 });

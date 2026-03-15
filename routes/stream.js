@@ -1,3 +1,4 @@
+// routes/stream.js
 const router = require("express").Router();
 const { addSSEClient } = require("../lib/queue");
 
@@ -7,7 +8,6 @@ router.get("/", (req, res) => {
   res.setHeader("Connection",    "keep-alive");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.flushHeaders();
-
   const remove = addSSEClient(res);
   req.on("close", remove);
 });

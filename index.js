@@ -1,10 +1,11 @@
+// index.js — QuantumDocsSyncer Backend
 require("dotenv").config();
-const express   = require("express");
-const cors      = require("cors");
-const mongoose  = require("mongoose");
+
+const express  = require("express");
+const cors     = require("cors");
+const mongoose = require("mongoose");
 
 const app = express();
-
 app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
 app.use(express.json());
 
@@ -19,11 +20,21 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", service: "QuantumDocsSyncer", queue: getQueueSize(), running: isProcessing() });
 });
 
+app.get("/", (req, res) => res.json({ service: "QuantumDocsSyncer API", status: "ok" }));
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("MongoDB connected");
+    console.log("✓ MongoDB connected");
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`\nQuantumDocsSyncer server → http://localhost:${PORT}\n`));
+    app.listen(PORT, () => {
+      console.log(`\n✓ QuantumDocsSyncer backend → http://localhost:${PORT}`);
+      console.log(`  Scoping to: src/ and include/ folders only`);
+      console.log(`  HF model: mistralai/Mistral-7B-Instruct-v0.3:hf-inference`);
+      console.log(`  Docs repo: ${process.env.GITHUB_DOCS_OWNER}/${process.env.GITHUB_DOCS_REPO}\n`);
+    });
   })
-  .catch(err => { console.error("MongoDB error:", err.message); process.exit(1); });
+  .catch(err => {
+    console.error("MongoDB connection failed:", err.message);
+    process.exit(1);
+  });
